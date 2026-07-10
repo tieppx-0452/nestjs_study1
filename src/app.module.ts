@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PostsModule } from './posts/posts.module';
@@ -16,6 +17,11 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
       useClass: JwtAuthGuard,
     }
   ],
-  imports: [PostsModule, AuthModule, UsersModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PostsModule,
+    AuthModule,
+    UsersModule,
+  ],
 })
 export class AppModule {}
