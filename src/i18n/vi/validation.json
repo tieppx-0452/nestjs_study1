@@ -1,0 +1,5 @@
+{
+  "IS_EMAIL": "{property} phải là email hợp lệ",
+  "IS_STRING": "{property} phải là chuỗi ký tự",
+  "IS_NOT_EMPTY": "{property} không được để trống"
+}

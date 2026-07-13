@@ -9,7 +9,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService, toUserResponse } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthService } from '../auth/auth.service';
@@ -35,15 +35,7 @@ export class UsersController {
   async create(@Body() createUserDto: CreateUserDto) {
     const user = await this.usersService.create(createUserDto.user);
     const { access_token } = await this.authService.login(user);
-    return {
-      user: {
-        email: user.email,
-        token: access_token,
-        username: user.username,
-        bio: user.bio,
-        image: user.image,
-      },
-    };
+    return toUserResponse(user, access_token);
   }
 
   @Get()
@@ -58,7 +50,7 @@ export class UsersController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+    return this.usersService.update(+id, updateUserDto.user);
   }
 
   @Delete(':id')
