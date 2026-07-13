@@ -30,9 +30,20 @@ export class UsersController {
     return this.authService.login(req.user);
   }
 
+  @Public()
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const user = await this.usersService.create(createUserDto.user);
+    const { access_token } = await this.authService.login(user);
+    return {
+      user: {
+        email: user.email,
+        token: access_token,
+        username: user.username,
+        bio: user.bio,
+        image: user.image,
+      },
+    };
   }
 
   @Get()

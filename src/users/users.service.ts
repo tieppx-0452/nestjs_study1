@@ -1,31 +1,36 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import { User } from './entities/user.entity';
+import { RegisterUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-// This should be a real class/interface representing a user entity
-export type User = any;
+const SALT_ROUNDS = 10;
 
 @Injectable()
 export class UsersService {
-  private readonly users = [
-    {
-      userId: 1,
-      username: 'john',
-      password: 'changeme',
-    },
-    {
-      userId: 2,
-      username: 'maria',
-      password: 'guess',
-    },
-  ];
+  constructor(
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+  ) {}
 
-  async findByUsername(username: string): Promise<User | undefined> {
-    return this.users.find(user => user.username === username);
+  async create(registerUserDto: RegisterUserDto): Promise<User> {
+    const password = await bcrypt.hash(registerUserDto.password, SALT_ROUNDS);
+    const user = this.usersRepository.create({ ...registerUserDto, password });
+
+    try {
+      return await this.usersRepository.save(user);
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new ConflictException('Username or email already exists');
+      }
+      throw error;
+    }
   }
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  async findByUsername(username: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { username } });
   }
 
   findAll() {
