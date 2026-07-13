@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import {
   FastifyAdapter,
@@ -11,8 +12,8 @@ async function bootstrap() {
     AppModule,
     new FastifyAdapter()
   );
-  app.setGlobalPrefix('api/v1');
-  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.setGlobalPrefix('api');
+  // app.useGlobalInterceptors(new ResponseInterceptor());
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
