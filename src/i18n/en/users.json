@@ -1,3 +1,5 @@
 {
-  "USERNAME_OR_EMAIL_EXISTS": "Username or email already exists"
+  "USERNAME_OR_EMAIL_EXISTS": "Username or email already exists",
+  "USER_NOT_FOUND": "User not found",
+  "CANNOT_FOLLOW_YOURSELF": "You cannot follow yourself"
 }
