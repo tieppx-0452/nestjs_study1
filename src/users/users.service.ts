@@ -50,6 +50,10 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { username } });
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { email } });
+  }
+
   findAll() {
     return `This action returns all users`;
   }

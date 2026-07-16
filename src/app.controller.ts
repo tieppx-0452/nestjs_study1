@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Put, Request, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Put, Request, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
 import { LocalAuthGuard } from './auth/local-auth.guard';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
@@ -24,8 +24,13 @@ export class AppController {
 
   @UseGuards(JwtAuthGuard)
   @Get('user')
-  getCurrentUser(@Request() req) {
-    return req.user;
+  async getCurrentUser(@Request() req) {
+    const user = await this.usersService.findOne(req.user.userId);
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    const { access_token } = await this.authService.login(user);
+    return toUserResponse(user, access_token);
   }
 
   @UseGuards(JwtAuthGuard)

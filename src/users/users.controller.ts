@@ -5,9 +5,11 @@ import {
   Body,
   Patch,
   Param,
+  ParseIntPipe,
   Delete,
   Request,
   UseGuards,
+  HttpCode,
 } from '@nestjs/common';
 import { UsersService, toUserResponse } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -25,9 +27,11 @@ export class UsersController {
 
   @Public()
   @UseGuards(LocalAuthGuard)
+  @HttpCode(200)
   @Post('login')
   async login(@Request() req) {
-    return this.authService.login(req.user);
+    const { access_token } = await this.authService.login(req.user);
+    return toUserResponse(req.user, access_token);
   }
 
   @Public()
@@ -44,17 +48,17 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto.user);
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(id, updateUserDto.user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.remove(id);
   }
 }
