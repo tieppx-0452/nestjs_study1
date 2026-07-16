@@ -1,12 +1,14 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { I18nService } from 'nestjs-i18n';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { Follow } from './entities/follow.entity';
 import { RegisterUserDto } from './dto/create-user.dto';
 import { UpdateUserFieldsDto } from './dto/update-user.dto';
+import { ProfileResponseDto } from './dto/profile-response.dto';
 
 const SALT_ROUNDS = 10;
 
@@ -29,6 +31,7 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Follow)
     private readonly followsRepository: Repository<Follow>,
+    private readonly jwtService: JwtService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -62,7 +65,7 @@ export class UsersService {
     return this.usersRepository.findOneBy({ id });
   }
 
-  async update(id: number, updateUserDto: UpdateUserFieldsDto): Promise<User> {
+  async update(id: number, updateUserDto: UpdateUserFieldsDto) {
     const { password, ...rest } = updateUserDto;
     const data: Partial<User> = { ...rest };
     if (password) {
@@ -78,7 +81,13 @@ export class UsersService {
       throw error;
     }
 
-    return (await this.usersRepository.findOneBy({ id }))!;
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
+    }
+
+    const token = this.jwtService.sign({ username: user.username, sub: user.id });
+    return toUserResponse(user, token);
   }
 
   remove(id: number) {
@@ -92,7 +101,17 @@ export class UsersService {
     return count > 0;
   }
 
-  async follow(followerId: number, targetUsername: string): Promise<User> {
+  async getProfile(username: string, viewerId?: number): Promise<ProfileResponseDto> {
+    const user = await this.findByUsername(username);
+    if (!user) {
+      throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
+    }
+
+    const following = viewerId ? await this.isFollowing(viewerId, user.id) : false;
+    return new ProfileResponseDto(user, following);
+  }
+
+  async follow(followerId: number, targetUsername: string): Promise<ProfileResponseDto> {
     const target = await this.findByUsername(targetUsername);
     if (!target) {
       throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
@@ -108,10 +127,10 @@ export class UsersService {
       );
     }
 
-    return target;
+    return new ProfileResponseDto(target, true);
   }
 
-  async unfollow(followerId: number, targetUsername: string): Promise<User> {
+  async unfollow(followerId: number, targetUsername: string): Promise<ProfileResponseDto> {
     const target = await this.findByUsername(targetUsername);
     if (!target) {
       throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
@@ -119,6 +138,6 @@ export class UsersService {
 
     await this.followsRepository.delete({ followerId, followingId: target.id });
 
-    return target;
+    return new ProfileResponseDto(target, false);
   }
 }
