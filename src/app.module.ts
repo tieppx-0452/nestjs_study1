@@ -13,6 +13,7 @@ import { AppService } from './app.service';
 import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { ArticlesModule } from './articles/articles.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { dataSourceOptions } from './database/data-source';
@@ -44,6 +45,7 @@ import { dataSourceOptions } from './database/data-source';
     PostsModule,
     AuthModule,
     UsersModule,
+    ArticlesModule,
   ],
 })
 export class AppModule {}

@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { I18nService } from 'nestjs-i18n';
 import * as bcrypt from 'bcrypt';
@@ -99,6 +99,16 @@ export class UsersService {
       where: { followerId, followingId },
     });
     return count > 0;
+  }
+
+  async isFollowingMany(followerId: number, followingIds: number[]): Promise<Set<number>> {
+    if (!followingIds.length) {
+      return new Set();
+    }
+    const rows = await this.followsRepository.find({
+      where: { followerId, followingId: In(followingIds) },
+    });
+    return new Set(rows.map((row) => row.followingId));
   }
 
   async getProfile(username: string, viewerId?: number): Promise<ProfileResponseDto> {
