@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -35,18 +40,38 @@ export class UsersService {
     private readonly i18n: I18nService,
   ) {}
 
-  async create(registerUserDto: RegisterUserDto): Promise<User> {
+  private buildAuthResponse(user: User) {
+    const token = this.jwtService.sign({ username: user.username, sub: user.id });
+    return toUserResponse(user, token);
+  }
+
+  login(user: User) {
+    return this.buildAuthResponse(user);
+  }
+
+  async getCurrentUser(id: number) {
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    return this.buildAuthResponse(user);
+  }
+
+  async create(registerUserDto: RegisterUserDto) {
     const password = await bcrypt.hash(registerUserDto.password, SALT_ROUNDS);
     const user = this.usersRepository.create({ ...registerUserDto, password });
 
+    let saved: User;
     try {
-      return await this.usersRepository.save(user);
+      saved = await this.usersRepository.save(user);
     } catch (error) {
       if (error.code === '23505') {
         throw new ConflictException(this.i18n.t('users.USERNAME_OR_EMAIL_EXISTS'));
       }
       throw error;
     }
+
+    return this.buildAuthResponse(saved);
   }
 
   async findByUsername(username: string): Promise<User | null> {
@@ -86,8 +111,7 @@ export class UsersService {
       throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
     }
 
-    const token = this.jwtService.sign({ username: user.username, sub: user.id });
-    return toUserResponse(user, token);
+    return this.buildAuthResponse(user);
   }
 
   remove(id: number) {

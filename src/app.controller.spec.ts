@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersService } from './users/users.service';
-import { AuthService } from './auth/auth.service';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -12,8 +11,7 @@ describe('AppController', () => {
       controllers: [AppController],
       providers: [
         AppService,
-        { provide: UsersService, useValue: { update: jest.fn(), findOne: jest.fn() } },
-        { provide: AuthService, useValue: { login: jest.fn() } },
+        { provide: UsersService, useValue: { update: jest.fn(), getCurrentUser: jest.fn() } },
       ],
     }).compile();
 
