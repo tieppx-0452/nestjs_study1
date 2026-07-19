@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { I18nService } from 'nestjs-i18n';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
+import { Follow } from './entities/follow.entity';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -15,6 +17,11 @@ describe('UsersService', () => {
           provide: getRepositoryToken(User),
           useValue: { create: jest.fn(), save: jest.fn(), findOne: jest.fn() },
         },
+        {
+          provide: getRepositoryToken(Follow),
+          useValue: { create: jest.fn(), save: jest.fn(), count: jest.fn(), delete: jest.fn() },
+        },
+        { provide: JwtService, useValue: { sign: jest.fn() } },
         { provide: I18nService, useValue: { t: jest.fn() } },
       ],
     }).compile();

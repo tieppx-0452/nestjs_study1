@@ -1,3 +1,5 @@
 {
-  "USERNAME_OR_EMAIL_EXISTS": "Tên đăng nhập hoặc email đã tồn tại"
+  "USERNAME_OR_EMAIL_EXISTS": "Tên đăng nhập hoặc email đã tồn tại",
+  "USER_NOT_FOUND": "Không tìm thấy người dùng",
+  "CANNOT_FOLLOW_YOURSELF": "Bạn không thể tự follow chính mình"
 }

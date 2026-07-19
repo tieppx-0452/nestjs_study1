@@ -12,7 +12,7 @@ describe('AppController', () => {
       controllers: [AppController],
       providers: [
         AppService,
-        { provide: UsersService, useValue: { update: jest.fn() } },
+        { provide: UsersService, useValue: { update: jest.fn(), findOne: jest.fn() } },
         { provide: AuthService, useValue: { login: jest.fn() } },
       ],
     }).compile();

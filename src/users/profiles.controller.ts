@@ -1,4 +1,4 @@
-import { Controller, Get, NotFoundException, Param, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Public } from '../auth/public.decorator';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
@@ -11,12 +11,17 @@ export class ProfilesController {
   @Public()
   @UseGuards(OptionalJwtAuthGuard)
   @Get(':username')
-  async getProfile(@Param('username') username: string): Promise<ProfileResponseDto> {
-    const user = await this.usersService.findByUsername(username);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+  getProfile(@Param('username') username: string, @Request() req): Promise<ProfileResponseDto> {
+    return this.usersService.getProfile(username, req.user?.userId);
+  }
 
-    return new ProfileResponseDto(user);
+  @Post(':username/follow')
+  followUser(@Param('username') username: string, @Request() req): Promise<ProfileResponseDto> {
+    return this.usersService.follow(req.user.userId, username);
+  }
+
+  @Delete(':username/follow')
+  unfollowUser(@Param('username') username: string, @Request() req): Promise<ProfileResponseDto> {
+    return this.usersService.unfollow(req.user.userId, username);
   }
 }
