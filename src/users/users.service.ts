@@ -114,8 +114,12 @@ export class UsersService {
     return this.buildAuthResponse(user);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number) {
+    const res = await this.usersRepository.delete(id);
+    if (res.affected === 0) {
+      throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
+    }
+    return { message: `User #${id} removed successfully` };
   }
 
   async isFollowing(followerId: number, followingId: number): Promise<boolean> {
