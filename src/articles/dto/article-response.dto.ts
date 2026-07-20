@@ -36,3 +36,11 @@ export class ArticlesResponseDto {
     this.articlesCount = articlesCount;
   }
 }
+
+export class ArticleResponseDto {
+  article: ArticleDto;
+
+  constructor(article: ArticleDto) {
+    this.article = article;
+  }
+}

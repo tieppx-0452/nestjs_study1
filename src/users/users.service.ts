@@ -135,6 +135,11 @@ export class UsersService {
     return new Set(rows.map((row) => row.followingId));
   }
 
+  async getFollowingIds(followerId: number): Promise<number[]> {
+    const rows = await this.followsRepository.find({ where: { followerId } });
+    return rows.map((row) => row.followingId);
+  }
+
   async getProfile(username: string, viewerId?: number): Promise<ProfileResponseDto> {
     const user = await this.findByUsername(username);
     if (!user) {
