@@ -11,35 +11,28 @@ import {
   UseGuards,
   HttpCode,
 } from '@nestjs/common';
-import { UsersService, toUserResponse } from './users.service';
+import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { AuthService } from '../auth/auth.service';
 import { LocalAuthGuard } from '../auth/local-auth.guard';
 import { Public } from '../auth/public.decorator';
 
 @Controller('users')
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Public()
   @UseGuards(LocalAuthGuard)
   @HttpCode(200)
   @Post('login')
-  async login(@Request() req) {
-    const { access_token } = await this.authService.login(req.user);
-    return toUserResponse(req.user, access_token);
+  login(@Request() req) {
+    return this.usersService.login(req.user);
   }
 
   @Public()
   @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    const user = await this.usersService.create(createUserDto.user);
-    const { access_token } = await this.authService.login(user);
-    return toUserResponse(user, access_token);
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto.user);
   }
 
   @Get()
