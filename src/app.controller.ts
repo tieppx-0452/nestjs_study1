@@ -6,6 +6,8 @@ import { Public } from './auth/public.decorator';
 import { UsersService } from './users/users.service';
 import { UpdateUserDto } from './users/dto/update-user.dto';
 
+import { getBaseUrlFromRequest } from './common/utils/url.util';
+
 @Controller()
 export class AppController {
   constructor(
@@ -23,13 +25,13 @@ export class AppController {
   @UseGuards(JwtAuthGuard)
   @Get('user')
   getCurrentUser(@Request() req) {
-    return this.usersService.getCurrentUser(req.user.userId);
+    return this.usersService.getCurrentUser(req.user.userId, getBaseUrlFromRequest(req));
   }
 
   @UseGuards(JwtAuthGuard)
   @Put('user')
   updateCurrentUser(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(req.user.userId, updateUserDto.user);
+    return this.usersService.update(req.user.userId, updateUserDto.user, getBaseUrlFromRequest(req));
   }
 
   @Public()

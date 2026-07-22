@@ -9,22 +9,28 @@ import { In, Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { I18nService } from 'nestjs-i18n';
 import * as bcrypt from 'bcrypt';
+import { existsSync, unlinkSync } from 'fs';
+import { join } from 'path';
 import { User } from './entities/user.entity';
 import { Follow } from './entities/follow.entity';
 import { RegisterUserDto } from './dto/create-user.dto';
 import { UpdateUserFieldsDto } from './dto/update-user.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
+import { buildSelfUrl } from '../common/utils/url.util';
 
 const SALT_ROUNDS = 10;
 
-export function toUserResponse(user: User, token: string) {
+export function toUserResponse(user: User, token: string, baseUrl?: string) {
   return {
     user: {
       email: user.email,
       token,
       username: user.username,
       bio: user.bio,
-      image: user.image,
+      image: buildSelfUrl(user.image, baseUrl),
+      imageOriginalName: user.imageOriginalName ?? null,
+      imageMimeType: user.imageMimeType ?? null,
+      imageSize: user.imageSize ?? null,
     },
   };
 }
@@ -40,24 +46,24 @@ export class UsersService {
     private readonly i18n: I18nService,
   ) {}
 
-  private buildAuthResponse(user: User) {
+  private buildAuthResponse(user: User, baseUrl?: string) {
     const token = this.jwtService.sign({ username: user.username, sub: user.id });
-    return toUserResponse(user, token);
+    return toUserResponse(user, token, baseUrl);
   }
 
-  login(user: User) {
-    return this.buildAuthResponse(user);
+  login(user: User, baseUrl?: string) {
+    return this.buildAuthResponse(user, baseUrl);
   }
 
-  async getCurrentUser(id: number) {
+  async getCurrentUser(id: number, baseUrl?: string) {
     const user = await this.usersRepository.findOneBy({ id });
     if (!user) {
       throw new UnauthorizedException();
     }
-    return this.buildAuthResponse(user);
+    return this.buildAuthResponse(user, baseUrl);
   }
 
-  async create(registerUserDto: RegisterUserDto) {
+  async create(registerUserDto: RegisterUserDto, baseUrl?: string) {
     const password = await bcrypt.hash(registerUserDto.password, SALT_ROUNDS);
     const user = this.usersRepository.create({ ...registerUserDto, password });
 
@@ -71,7 +77,7 @@ export class UsersService {
       throw error;
     }
 
-    return this.buildAuthResponse(saved);
+    return this.buildAuthResponse(saved, baseUrl);
   }
 
   async findByUsername(username: string): Promise<User | null> {
@@ -82,15 +88,24 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll(baseUrl?: string) {
+    const users = await this.usersRepository.find();
+    return users.map((user) => ({
+      ...user,
+      image: buildSelfUrl(user.image, baseUrl),
+    }));
   }
 
-  async findOne(id: number): Promise<User | null> {
-    return this.usersRepository.findOneBy({ id });
+  async findOne(id: number, baseUrl?: string): Promise<User | null> {
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) return null;
+    return {
+      ...user,
+      image: buildSelfUrl(user.image, baseUrl) as string,
+    };
   }
 
-  async update(id: number, updateUserDto: UpdateUserFieldsDto) {
+  async update(id: number, updateUserDto: UpdateUserFieldsDto, baseUrl?: string) {
     const { password, ...rest } = updateUserDto;
     const data: Partial<User> = { ...rest };
     if (password) {
@@ -111,7 +126,41 @@ export class UsersService {
       throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
     }
 
-    return this.buildAuthResponse(user);
+    return this.buildAuthResponse(user, baseUrl);
+  }
+
+  async updateAvatar(
+    userId: number,
+    fileInfo: {
+      relativePath: string;
+      originalName: string;
+      mimeType: string;
+      size: number;
+    },
+    baseUrl?: string,
+  ) {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
+    }
+
+    if (user.image && user.image.startsWith('uploads/')) {
+      const oldPath = join(process.cwd(), user.image);
+      if (existsSync(oldPath)) {
+        try {
+          unlinkSync(oldPath);
+        } catch (e) {}
+      }
+    }
+
+    user.image = fileInfo.relativePath;
+    user.imageOriginalName = fileInfo.originalName;
+    user.imageMimeType = fileInfo.mimeType;
+    user.imageSize = fileInfo.size;
+
+    await this.usersRepository.save(user);
+
+    return this.buildAuthResponse(user, baseUrl);
   }
 
   async remove(id: number) {
@@ -144,17 +193,17 @@ export class UsersService {
     return rows.map((row) => row.followingId);
   }
 
-  async getProfile(username: string, viewerId?: number): Promise<ProfileResponseDto> {
+  async getProfile(username: string, viewerId?: number, baseUrl?: string): Promise<ProfileResponseDto> {
     const user = await this.findByUsername(username);
     if (!user) {
       throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
     }
 
     const following = viewerId ? await this.isFollowing(viewerId, user.id) : false;
-    return new ProfileResponseDto(user, following);
+    return new ProfileResponseDto(user, following, baseUrl);
   }
 
-  async follow(followerId: number, targetUsername: string): Promise<ProfileResponseDto> {
+  async follow(followerId: number, targetUsername: string, baseUrl?: string): Promise<ProfileResponseDto> {
     const target = await this.findByUsername(targetUsername);
     if (!target) {
       throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
@@ -170,10 +219,10 @@ export class UsersService {
       );
     }
 
-    return new ProfileResponseDto(target, true);
+    return new ProfileResponseDto(target, true, baseUrl);
   }
 
-  async unfollow(followerId: number, targetUsername: string): Promise<ProfileResponseDto> {
+  async unfollow(followerId: number, targetUsername: string, baseUrl?: string): Promise<ProfileResponseDto> {
     const target = await this.findByUsername(targetUsername);
     if (!target) {
       throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
@@ -181,6 +230,6 @@ export class UsersService {
 
     await this.followsRepository.delete({ followerId, followingId: target.id });
 
-    return new ProfileResponseDto(target, false);
+    return new ProfileResponseDto(target, false, baseUrl);
   }
 }

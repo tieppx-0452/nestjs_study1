@@ -3,6 +3,7 @@ import { UsersService } from './users.service';
 import { Public } from '../auth/public.decorator';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { ProfileResponseDto } from './dto/profile-response.dto';
+import { getBaseUrlFromRequest } from '../common/utils/url.util';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -12,16 +13,16 @@ export class ProfilesController {
   @UseGuards(OptionalJwtAuthGuard)
   @Get(':username')
   getProfile(@Param('username') username: string, @Request() req): Promise<ProfileResponseDto> {
-    return this.usersService.getProfile(username, req.user?.userId);
+    return this.usersService.getProfile(username, req.user?.userId, getBaseUrlFromRequest(req));
   }
 
   @Post(':username/follow')
   followUser(@Param('username') username: string, @Request() req): Promise<ProfileResponseDto> {
-    return this.usersService.follow(req.user.userId, username);
+    return this.usersService.follow(req.user.userId, username, getBaseUrlFromRequest(req));
   }
 
   @Delete(':username/follow')
   unfollowUser(@Param('username') username: string, @Request() req): Promise<ProfileResponseDto> {
-    return this.usersService.unfollow(req.user.userId, username);
+    return this.usersService.unfollow(req.user.userId, username, getBaseUrlFromRequest(req));
   }
 }

@@ -19,4 +19,13 @@ export class User {
 
   @Column({ nullable: true })
   image: string;
+
+  @Column({ nullable: true })
+  imageOriginalName: string;
+
+  @Column({ nullable: true })
+  imageMimeType: string;
+
+  @Column({ nullable: true, type: 'int' })
+  imageSize: number;
 }

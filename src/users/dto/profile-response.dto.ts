@@ -1,4 +1,5 @@
 import { User } from '../entities/user.entity';
+import { buildSelfUrl } from '../../common/utils/url.util';
 
 export class ProfileDto {
   username: string;
@@ -6,10 +7,10 @@ export class ProfileDto {
   image: string | null;
   following: boolean;
 
-  constructor(user: User, following = false) {
+  constructor(user: User, following = false, baseUrl?: string) {
     this.username = user.username;
     this.bio = user.bio;
-    this.image = user.image;
+    this.image = buildSelfUrl(user.image, baseUrl);
     this.following = following;
   }
 }
@@ -17,7 +18,7 @@ export class ProfileDto {
 export class ProfileResponseDto {
   profile: ProfileDto;
 
-  constructor(user: User, following = false) {
-    this.profile = new ProfileDto(user, following);
+  constructor(user: User, following = false, baseUrl?: string) {
+    this.profile = new ProfileDto(user, following, baseUrl);
   }
 }
