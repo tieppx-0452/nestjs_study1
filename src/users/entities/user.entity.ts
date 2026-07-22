@@ -1,5 +1,13 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+export interface AvatarMetadata {
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  path: string;
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -19,4 +27,7 @@ export class User {
 
   @Column({ nullable: true })
   image: string;
+
+  @Column({ type: 'json', nullable: true })
+  avatarMetadata: AvatarMetadata | null;
 }

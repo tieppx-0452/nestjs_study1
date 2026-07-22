@@ -14,6 +14,7 @@ import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ArticlesModule } from './articles/articles.module';
+import { CommonModule } from './common/common.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { dataSourceOptions } from './database/data-source';
@@ -28,7 +29,10 @@ import { dataSourceOptions } from './database/data-source';
     }
   ],
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      envFilePath: process.env.NODE_ENV === 'test' ? '.env.testing' : '.env',
+      isGlobal: true,
+    }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
@@ -42,6 +46,7 @@ import { dataSourceOptions } from './database/data-source';
       ],
     }),
     TypeOrmModule.forRoot(dataSourceOptions),
+    CommonModule,
     PostsModule,
     AuthModule,
     UsersModule,

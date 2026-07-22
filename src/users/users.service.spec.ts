@@ -5,6 +5,7 @@ import { I18nService } from 'nestjs-i18n';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { Follow } from './entities/follow.entity';
+import { UrlHelperService } from '../common/services/url-helper.service';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -23,6 +24,12 @@ describe('UsersService', () => {
         },
         { provide: JwtService, useValue: { sign: jest.fn() } },
         { provide: I18nService, useValue: { t: jest.fn() } },
+        {
+          provide: UrlHelperService,
+          useValue: {
+            asset: jest.fn((path) => (path ? `http://localhost:3000/${path.replace(/^\/+/, '')}` : null)),
+          },
+        },
       ],
     }).compile();
 
