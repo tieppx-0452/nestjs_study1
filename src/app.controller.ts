@@ -32,6 +32,7 @@ export class AppController {
     return this.usersService.update(req.user.userId, updateUserDto.user);
   }
 
+  @Public()
   @Get()
   getHello(): string {
     return this.appService.getHello();
