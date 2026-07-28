@@ -1,11 +1,14 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-export interface AvatarMetadata {
-  filename: string;
-  originalName: string;
-  mimeType: string;
-  size: number;
-  path: string;
+export enum Role {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
 }
 
 @Entity('users')
@@ -13,21 +16,27 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   email: string;
 
-  @Column({ unique: true })
-  username: string;
-
-  @Column({ unique: true })
+  @Column()
   password: string;
 
   @Column({ nullable: true })
-  bio: string;
+  name?: string;
 
   @Column({ nullable: true })
-  image: string;
+  avatar?: string;
 
-  @Column({ type: 'json', nullable: true })
-  avatarMetadata: AvatarMetadata | null;
+  @Column({ type: 'varchar', default: Role.USER })
+  role: Role;
+
+  @Column({ nullable: true })
+  bio?: string;
+
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
 }

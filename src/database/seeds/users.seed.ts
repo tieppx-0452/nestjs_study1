@@ -5,50 +5,27 @@ import { Role, User } from '../../users/entities/user.entity';
 export async function seedUsers(dataSource: DataSource): Promise<User[]> {
   const userRepository = dataSource.getRepository(User);
 
-  // Pre-hash passwords to optimize execution speed (< 50ms)
-  const adminPasswordHash = bcrypt.hashSync('Admin123!', 10);
-  const userPasswordHash = bcrypt.hashSync('User123!', 10);
+  const hashedPwd = bcrypt.hashSync('Aa@123456', 10);
 
   const users: Partial<User>[] = [
     {
       email: 'admin@example.com',
-      password: adminPasswordHash,
-      name: 'System Admin',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
+      password: hashedPwd,
+      name: 'admin',
+      avatar: 'user.jpg',
       role: Role.ADMIN,
-    },
-    {
-      email: 'user1@example.com',
-      password: userPasswordHash,
-      name: 'Nguyễn Văn A',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=User1',
-      role: Role.USER,
-    },
-    {
-      email: 'user2@example.com',
-      password: userPasswordHash,
-      name: 'Trần Thị B',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=User2',
-      role: Role.USER,
-    },
+    }
   ];
 
-  const firstNames = ['Lê', 'Phạm', 'Hoàng', 'Phan', 'Vũ', 'Đặng', 'Bùi', 'Đỗ', 'Hồ', 'Nghô'];
-  const middleNames = ['Văn', 'Thị', 'Đình', 'Minh', 'Hồng', 'Thành', 'Quang', 'Bảo'];
-  const lastNames = ['Hùng', 'Dũng', 'Trang', 'Hoa', 'Tú', 'Nam', 'Kiên', 'Hải', 'Yến', 'Long'];
-
-  for (let i = 3; i <= 55; i++) {
-    const fn = firstNames[i % firstNames.length];
-    const mn = middleNames[i % middleNames.length];
-    const ln = lastNames[i % lastNames.length];
-    const name = `${fn} ${mn} ${ln}`;
+  for (let i = 0; i < 50; i++) {
+    const name = `name ${i}`;
     const email = `user${i}@example.com`;
 
     users.push({
       email,
-      password: userPasswordHash,
+      password: hashedPwd,
       name,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=User${i}`,
+      avatar: `user.jpg`,
       role: Role.USER,
     });
   }
