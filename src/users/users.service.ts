@@ -11,7 +11,7 @@ import { I18nService } from 'nestjs-i18n';
 import * as bcrypt from 'bcrypt';
 import { existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
-import { AvatarMetadata, User } from './entities/user.entity';
+import { User } from './entities/user.entity';
 import { Follow } from './entities/follow.entity';
 import { RegisterUserDto } from './dto/create-user.dto';
 import { UpdateUserFieldsDto } from './dto/update-user.dto';
@@ -33,14 +33,19 @@ export function toUserResponse(
   token: string,
   urlHelper?: UrlHelperService,
 ) {
+  const avatarUrl = user.avatar
+    ? (urlHelper ? urlHelper.asset(user.avatar) : user.avatar)
+    : null;
+
   return {
     user: {
+      id: user.id,
       email: user.email,
       token,
-      username: user.username,
-      bio: user.bio,
-      image: urlHelper ? urlHelper.asset(user.image) : user.image,
-      avatarMetadata: user.avatarMetadata ?? null,
+      name: user.name ?? null,
+      avatar: avatarUrl,
+      role: user.role,
+      bio: user.bio ?? null,
     },
   };
 }
@@ -55,10 +60,14 @@ export class UsersService {
     private readonly jwtService: JwtService,
     private readonly i18n: I18nService,
     private readonly urlHelper: UrlHelperService,
-  ) {}
+  ) { }
 
   private buildAuthResponse(user: User) {
-    const token = this.jwtService.sign({ username: user.username, sub: user.id });
+    const token = this.jwtService.sign({
+      email: user.email,
+      sub: user.id,
+      role: user.role,
+    });
     return toUserResponse(user, token, this.urlHelper);
   }
 
@@ -91,19 +100,19 @@ export class UsersService {
     return this.buildAuthResponse(saved);
   }
 
-  async findByUsername(username: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { username } });
-  }
-
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { email } });
+  }
+
+  async findByUsername(username: string): Promise<User | null> {
+    return this.findByEmail(username);
   }
 
   async findAll() {
     const users = await this.usersRepository.find();
     return users.map((user) => ({
       ...user,
-      image: this.urlHelper.asset(user.image),
+      avatar: user.avatar ? (this.urlHelper.asset(user.avatar) as string) : undefined,
     }));
   }
 
@@ -112,7 +121,7 @@ export class UsersService {
     if (!user) return null;
     return {
       ...user,
-      image: this.urlHelper.asset(user.image) as string,
+      avatar: user.avatar ? (this.urlHelper.asset(user.avatar) as string) : undefined,
     };
   }
 
@@ -134,23 +143,16 @@ export class UsersService {
     }
 
     if (avatarFile) {
-      if (existingUser.image && existingUser.image.startsWith('uploads/')) {
-        const oldPath = join(process.cwd(), existingUser.image);
+      if (existingUser.avatar && existingUser.avatar.startsWith('uploads/')) {
+        const oldPath = join(process.cwd(), existingUser.avatar);
         if (existsSync(oldPath)) {
           try {
             unlinkSync(oldPath);
-          } catch (e) {}
+          } catch (e) { }
         }
       }
 
-      data.image = avatarFile.relativePath;
-      data.avatarMetadata = {
-        filename: avatarFile.filename,
-        originalName: avatarFile.originalName,
-        mimeType: avatarFile.mimeType,
-        size: avatarFile.size,
-        path: avatarFile.relativePath,
-      };
+      data.avatar = avatarFile.relativePath;
     }
 
     try {
@@ -203,13 +205,16 @@ export class UsersService {
   private buildProfileResponse(user: User, following = false): ProfileResponseDto {
     const formattedUser = {
       ...user,
-      image: this.urlHelper.asset(user.image),
+      avatar: user.avatar ? (this.urlHelper.asset(user.avatar) as string) : undefined,
     };
     return new ProfileResponseDto(formattedUser as User, following);
   }
 
-  async getProfile(username: string, viewerId?: number): Promise<ProfileResponseDto> {
-    const user = await this.findByUsername(username);
+  async getProfile(target: string, viewerId?: number): Promise<ProfileResponseDto> {
+    let user = await this.findByEmail(target);
+    if (!user && !isNaN(Number(target))) {
+      user = await this.findOne(Number(target));
+    }
     if (!user) {
       throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
     }
@@ -218,33 +223,39 @@ export class UsersService {
     return this.buildProfileResponse(user, following);
   }
 
-  async follow(followerId: number, targetUsername: string): Promise<ProfileResponseDto> {
-    const target = await this.findByUsername(targetUsername);
-    if (!target) {
+  async follow(followerId: number, target: string): Promise<ProfileResponseDto> {
+    let targetUser = await this.findByEmail(target);
+    if (!targetUser && !isNaN(Number(target))) {
+      targetUser = await this.findOne(Number(target));
+    }
+    if (!targetUser) {
       throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
     }
-    if (target.id === followerId) {
+    if (targetUser.id === followerId) {
       throw new ConflictException(this.i18n.t('users.CANNOT_FOLLOW_YOURSELF'));
     }
 
-    const alreadyFollowing = await this.isFollowing(followerId, target.id);
+    const alreadyFollowing = await this.isFollowing(followerId, targetUser.id);
     if (!alreadyFollowing) {
       await this.followsRepository.save(
-        this.followsRepository.create({ followerId, followingId: target.id }),
+        this.followsRepository.create({ followerId, followingId: targetUser.id }),
       );
     }
 
-    return this.buildProfileResponse(target, true);
+    return this.buildProfileResponse(targetUser, true);
   }
 
-  async unfollow(followerId: number, targetUsername: string): Promise<ProfileResponseDto> {
-    const target = await this.findByUsername(targetUsername);
-    if (!target) {
+  async unfollow(followerId: number, target: string): Promise<ProfileResponseDto> {
+    let targetUser = await this.findByEmail(target);
+    if (!targetUser && !isNaN(Number(target))) {
+      targetUser = await this.findOne(Number(target));
+    }
+    if (!targetUser) {
       throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
     }
 
-    await this.followsRepository.delete({ followerId, followingId: target.id });
+    await this.followsRepository.delete({ followerId, followingId: targetUser.id });
 
-    return this.buildProfileResponse(target, false);
+    return this.buildProfileResponse(targetUser, false);
   }
 }
