@@ -10,6 +10,10 @@ export async function seedBookings(
 ): Promise<Booking[]> {
   const bookingRepository = dataSource.getRepository(Booking);
 
+  if (!users.length || !tours.length) {
+    return [];
+  }
+
   const statuses = [
     BookingStatus.PENDING,
     BookingStatus.CONFIRMED,
@@ -23,11 +27,11 @@ export async function seedBookings(
   const tourIds = tours.map((tour) => tour.id);
 
   for (let i = 0; i < 50; i++) {
-    const status = statuses[(i - 1) % statuses.length];
+    const status = statuses[i % statuses.length];
 
     bookings.push({
-      userId: userIds[i],
-      tourId: tourIds[i],
+      userId: userIds[i % userIds.length],
+      tourId: tourIds[i % tourIds.length],
       status,
       totalPrice: 150000,
     });

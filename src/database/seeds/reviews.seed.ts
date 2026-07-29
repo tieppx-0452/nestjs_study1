@@ -10,14 +10,18 @@ export async function seedReviews(
 ): Promise<Review[]> {
   const reviewRepository = dataSource.getRepository(Review);
 
+  if (!users.length || !tours.length) {
+    return [];
+  }
+
   const reviews: Partial<Review>[] = [];
   const userIds = users.map((user) => user.id);
   const tourIds = tours.map((tour) => tour.id);
 
   for (let i = 0; i < 60; i++) {
     reviews.push({
-      userId: userIds[i],
-      tourId: tourIds[i],
+      userId: userIds[i % userIds.length],
+      tourId: tourIds[i % tourIds.length],
       comment: 'lorem ipsum dolor sit amet consectetur adipiscing elit.',
     });
   }

@@ -1,15 +1,21 @@
 import { User } from '../entities/user.entity';
 
 export class ProfileDto {
-  username: string;
+  id: number;
+  email: string;
+  name: string | null;
+  avatar: string | null;
+  role: string;
   bio: string | null;
-  image: string | null;
   following: boolean;
 
   constructor(user: User, following = false) {
-    this.username = user.username;
-    this.bio = user.bio;
-    this.image = user.image;
+    this.id = user.id;
+    this.email = user.email;
+    this.name = user.name ?? null;
+    this.avatar = user.avatar ?? null;
+    this.role = user.role;
+    this.bio = user.bio ?? null;
     this.following = following;
   }
 }
