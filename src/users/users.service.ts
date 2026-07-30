@@ -5,14 +5,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { I18nService } from 'nestjs-i18n';
 import * as bcrypt from 'bcrypt';
 import { existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { User } from './entities/user.entity';
-import { Follow } from './entities/follow.entity';
 import { RegisterUserDto } from './dto/create-user.dto';
 import { UpdateUserFieldsDto } from './dto/update-user.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
@@ -55,12 +54,10 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(Follow)
-    private readonly followsRepository: Repository<Follow>,
     private readonly jwtService: JwtService,
     private readonly i18n: I18nService,
     private readonly urlHelper: UrlHelperService,
-  ) { }
+  ) {}
 
   private buildAuthResponse(user: User) {
     const token = this.jwtService.sign({
@@ -148,7 +145,7 @@ export class UsersService {
         if (existsSync(oldPath)) {
           try {
             unlinkSync(oldPath);
-          } catch (e) { }
+          } catch (e) {}
         }
       }
 
@@ -180,28 +177,6 @@ export class UsersService {
     return { message: `User #${id} removed successfully` };
   }
 
-  async isFollowing(followerId: number, followingId: number): Promise<boolean> {
-    const count = await this.followsRepository.count({
-      where: { followerId, followingId },
-    });
-    return count > 0;
-  }
-
-  async isFollowingMany(followerId: number, followingIds: number[]): Promise<Set<number>> {
-    if (!followingIds.length) {
-      return new Set();
-    }
-    const rows = await this.followsRepository.find({
-      where: { followerId, followingId: In(followingIds) },
-    });
-    return new Set(rows.map((row) => row.followingId));
-  }
-
-  async getFollowingIds(followerId: number): Promise<number[]> {
-    const rows = await this.followsRepository.find({ where: { followerId } });
-    return rows.map((row) => row.followingId);
-  }
-
   private buildProfileResponse(user: User, following = false): ProfileResponseDto {
     const formattedUser = {
       ...user,
@@ -219,43 +194,6 @@ export class UsersService {
       throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
     }
 
-    const following = viewerId ? await this.isFollowing(viewerId, user.id) : false;
-    return this.buildProfileResponse(user, following);
-  }
-
-  async follow(followerId: number, target: string): Promise<ProfileResponseDto> {
-    let targetUser = await this.findByEmail(target);
-    if (!targetUser && !isNaN(Number(target))) {
-      targetUser = await this.findOne(Number(target));
-    }
-    if (!targetUser) {
-      throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
-    }
-    if (targetUser.id === followerId) {
-      throw new ConflictException(this.i18n.t('users.CANNOT_FOLLOW_YOURSELF'));
-    }
-
-    const alreadyFollowing = await this.isFollowing(followerId, targetUser.id);
-    if (!alreadyFollowing) {
-      await this.followsRepository.save(
-        this.followsRepository.create({ followerId, followingId: targetUser.id }),
-      );
-    }
-
-    return this.buildProfileResponse(targetUser, true);
-  }
-
-  async unfollow(followerId: number, target: string): Promise<ProfileResponseDto> {
-    let targetUser = await this.findByEmail(target);
-    if (!targetUser && !isNaN(Number(target))) {
-      targetUser = await this.findOne(Number(target));
-    }
-    if (!targetUser) {
-      throw new NotFoundException(this.i18n.t('users.USER_NOT_FOUND'));
-    }
-
-    await this.followsRepository.delete({ followerId, followingId: targetUser.id });
-
-    return this.buildProfileResponse(targetUser, false);
+    return this.buildProfileResponse(user, false);
   }
 }
