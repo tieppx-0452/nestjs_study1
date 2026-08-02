@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   Post,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { AdminAuthService } from './admin-auth.service';
@@ -15,7 +16,7 @@ import { AdminLoginDto } from './dto/admin-login.dto';
 @Controller('v1/admin')
 @UseGuards(RolesGuard)
 export class AdminAuthController {
-  constructor(private readonly adminAuthService: AdminAuthService) {}
+  constructor(private readonly adminAuthService: AdminAuthService) { }
 
   @Public()
   @HttpCode(200)
@@ -27,7 +28,8 @@ export class AdminAuthController {
   @Roles(Role.ADMIN)
   @HttpCode(200)
   @Post('logout')
-  logout() {
+  logout(@Request() req) {
+    req.logout();
     return this.adminAuthService.logout();
   }
 }

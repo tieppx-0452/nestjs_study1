@@ -1,5 +1,9 @@
 {
   "IS_EMAIL": "{property} must be a valid email address",
   "IS_STRING": "{property} must be a string",
-  "IS_NOT_EMPTY": "{property} should not be empty"
+  "IS_NOT_EMPTY": "{property} should not be empty",
+  "MULTIPART_REQUIRED": "Request must be multipart/form-data",
+  "FILE_REQUIRED": "No file uploaded",
+  "INVALID_FILE_TYPE": "Invalid file type. Only JPG, JPEG, and PNG images are allowed.",
+  "FILE_SIZE_EXCEEDED": "File size exceeds maximum limit of 5MB."
 }

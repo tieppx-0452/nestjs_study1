@@ -1,0 +1,11 @@
+{
+  "INVALID_CREDENTIALS": "Email hoặc mật khẩu không hợp lệ",
+  "LOGOUT_SUCCESS": "Đăng xuất Admin thành công",
+  "USER_REMOVED_SUCCESS": "Đã xóa người dùng #{id} thành công",
+  "ACCESS_DENIED": "Từ chối truy cập: Không đủ quyền",
+  "TOUR_NOT_FOUND": "Không tìm thấy tour du lịch",
+  "TOUR_CREATED_SUCCESS": "Tạo tour du lịch thành công",
+  "TOUR_UPDATED_SUCCESS": "Cập nhật tour du lịch thành công",
+  "TOUR_DELETED_SUCCESS": "Xóa tour du lịch thành công",
+  "CATEGORY_NOT_FOUND": "Không tìm thấy danh mục"
+}
