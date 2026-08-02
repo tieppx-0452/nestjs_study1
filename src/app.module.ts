@@ -12,6 +12,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { AdminModule } from './admin/admin.module';
 import { CommonModule } from './common/common.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
@@ -24,7 +25,7 @@ import { dataSourceOptions } from './database/data-source';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
-    }
+    },
   ],
   imports: [
     ConfigModule.forRoot({
@@ -47,6 +48,7 @@ import { dataSourceOptions } from './database/data-source';
     CommonModule,
     AuthModule,
     UsersModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
