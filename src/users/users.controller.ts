@@ -11,9 +11,11 @@ import {
   UseGuards,
   HttpCode,
   BadRequestException,
+  Optional,
 } from '@nestjs/common';
 import * as path from 'path';
 import * as fs from 'fs';
+import { I18nService } from 'nestjs-i18n';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -56,7 +58,10 @@ function extractUserFields(fields: any, bodyDto?: any): any {
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    @Optional() private readonly i18n: I18nService,
+  ) { }
 
   @Public()
   @UseGuards(LocalAuthGuard)
@@ -75,24 +80,32 @@ export class UsersController {
   @Post('avatar')
   async uploadAvatar(@Request() req) {
     if (!req.isMultipart || !req.isMultipart()) {
-      throw new BadRequestException('Request must be multipart/form-data');
+      throw new BadRequestException(
+        this.i18n.t('validation.MULTIPART_REQUIRED'),
+      );
     }
 
     const file = await req.file();
     if (!file) {
-      throw new BadRequestException('No file uploaded');
+      throw new BadRequestException(
+        this.i18n.t('validation.FILE_REQUIRED'),
+      );
     }
 
     const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException(
-        'Invalid file type. Only JPG, JPEG, and PNG images are allowed.',
+        this.i18n.t(
+          'validation.INVALID_FILE_TYPE',
+        ),
       );
     }
 
     const buffer = await file.toBuffer();
     if (buffer.length > 5 * 1024 * 1024) {
-      throw new BadRequestException('File size exceeds maximum limit of 5MB.');
+      throw new BadRequestException(
+        this.i18n.t('validation.FILE_SIZE_EXCEEDED'),
+      );
     }
 
     const filename = generateFormattedFilename(file.filename);
@@ -102,7 +115,7 @@ export class UsersController {
     } else {
       try {
         fs.chmodSync(avatarsDir, 0o755);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const filePath = path.join(avatarsDir, filename);
@@ -147,13 +160,17 @@ export class UsersController {
         const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
         if (!allowedMimeTypes.includes(part.mimetype)) {
           throw new BadRequestException(
-            'Invalid file type. Only JPG, JPEG, and PNG images are allowed.',
+            this.i18n.t(
+              'validation.INVALID_FILE_TYPE',
+            ),
           );
         }
 
         const buffer = await part.toBuffer();
         if (buffer.length > 5 * 1024 * 1024) {
-          throw new BadRequestException('File size exceeds maximum limit of 5MB.');
+          throw new BadRequestException(
+            this.i18n.t('validation.FILE_SIZE_EXCEEDED'),
+          );
         }
 
         const filename = generateFormattedFilename(part.filename);
@@ -163,7 +180,7 @@ export class UsersController {
         } else {
           try {
             fs.chmodSync(avatarsDir, 0o755);
-          } catch (e) {}
+          } catch (e) { }
         }
 
         const filePath = path.join(avatarsDir, filename);

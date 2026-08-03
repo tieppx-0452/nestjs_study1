@@ -1,0 +1,11 @@
+{
+  "INVALID_CREDENTIALS": "Invalid email or password",
+  "LOGOUT_SUCCESS": "Admin logout successful",
+  "USER_REMOVED_SUCCESS": "User #{id} removed successfully",
+  "ACCESS_DENIED": "Access denied: Insufficient permissions",
+  "TOUR_NOT_FOUND": "Tour not found",
+  "TOUR_CREATED_SUCCESS": "Tour created successfully",
+  "TOUR_UPDATED_SUCCESS": "Tour updated successfully",
+  "TOUR_DELETED_SUCCESS": "Tour deleted successfully",
+  "CATEGORY_NOT_FOUND": "Category not found"
+}
