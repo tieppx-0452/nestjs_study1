@@ -5,5 +5,7 @@
   "MULTIPART_REQUIRED": "Yêu cầu phải là multipart/form-data",
   "FILE_REQUIRED": "Chưa tải tệp lên",
   "INVALID_FILE_TYPE": "Loại tệp không hợp lệ. Chỉ chấp nhận ảnh JPG, JPEG và PNG.",
-  "FILE_SIZE_EXCEEDED": "Kích thước tệp vượt quá giới hạn tối đa 5MB."
+  "FILE_SIZE_EXCEEDED": "Kích thước tệp vượt quá giới hạn tối đa 5MB.",
+  "INVALID_DATE_FORMAT": "Định dạng ngày không hợp lệ. Kỳ vọng YYYY-MM-DD",
+  "START_DATE_AFTER_END_DATE": "start_date phải nhỏ hơn hoặc bằng end_date"
 }
