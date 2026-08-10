@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Public } from '../auth/public.decorator';
 import { ToursService } from './tours.service';
-import { GetToursQueryDto } from './dto/tours.dto';
+import { SearchTourQueryDto } from './dto/search-tour.dto';
 
 @Controller('v1/tours')
 export class ToursController {
@@ -15,7 +15,7 @@ export class ToursController {
 
   @Public()
   @Get()
-  findAll(@Query() query: GetToursQueryDto) {
+  findAll(@Query() query: SearchTourQueryDto) {
     return this.toursService.findAll(query);
   }
 

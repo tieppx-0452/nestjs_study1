@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { I18nService } from 'nestjs-i18n';
 import { Tour } from './entities/tour.entity';
-import { GetToursQueryDto } from './dto/tours.dto';
+import { SearchTourQueryDto } from './dto/search-tour.dto';
 import { UrlHelperService } from '../common/services/url-helper.service';
 
 @Injectable()
@@ -13,9 +13,9 @@ export class ToursService {
     private readonly tourRepository: Repository<Tour>,
     private readonly urlHelper: UrlHelperService,
     @Optional() private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
-  async findAll(query: GetToursQueryDto) {
+  async findAll(query: SearchTourQueryDto) {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -23,7 +23,9 @@ export class ToursService {
     const qb = this.tourRepository
       .createQueryBuilder('tour')
       .leftJoinAndSelect('tour.category', 'category')
-      .leftJoinAndSelect('tour.images', 'images');
+      .leftJoinAndSelect('tour.images', 'images')
+      .leftJoinAndSelect('tour.reviews', 'reviews')
+      .leftJoinAndSelect('reviews.user', 'user');
 
     if (query.startDate) {
       qb.andWhere('tour.startDate >= :startDate', {
@@ -34,14 +36,22 @@ export class ToursService {
       qb.andWhere('tour.endDate <= :endDate', { endDate: query.endDate });
     }
 
-    const categoryId = query.categoryId;
-    if (categoryId) {
-      qb.andWhere('tour.categoryId = :categoryId', { categoryId });
+    if (query.categories && query.categories.length > 0) {
+      qb.andWhere('tour.categoryId IN (:...categories)', {
+        categories: query.categories,
+      });
+    } else if (query.categoryId) {
+      qb.andWhere('tour.categoryId = :categoryId', {
+        categoryId: query.categoryId,
+      });
     }
 
     const searchStr = query.q;
     if (searchStr) {
-      qb.andWhere('tour.title ILIKE :search', { search: `%${searchStr}%` });
+      qb.andWhere(
+        '(tour.title ILIKE :search OR tour.description ILIKE :search)',
+        { search: `%${searchStr}%` },
+      );
     }
 
     qb.orderBy('tour.id', 'DESC').skip(skip).take(limit);
@@ -50,11 +60,26 @@ export class ToursService {
 
     const formattedTours = tours.map((tour) => {
       const imagePath = (tour as any).image;
+      const formattedReviews = tour.reviews?.map((review) => ({
+        ...review,
+        user: review.user
+          ? {
+            id: review.user.id,
+            name: review.user.name,
+            avatar: review.user.avatar,
+            avatar_url: review.user.avatar
+              ? this.urlHelper.asset(review.user.avatar)
+              : null,
+          }
+          : null,
+      }));
       return {
         ...tour,
         image: imagePath ? this.urlHelper.asset(imagePath) : null,
+        reviews: formattedReviews || [],
       };
     });
+
 
     const totalPages = Math.ceil(total / limit) || 1;
 
@@ -63,7 +88,7 @@ export class ToursService {
       messages: [],
       data: {
         tours: formattedTours,
-        meta: {
+        pagination: {
           total,
           page,
           limit,
@@ -79,6 +104,9 @@ export class ToursService {
       relations: {
         category: true,
         images: true,
+        reviews: {
+          user: true,
+        },
       },
     });
 
@@ -87,9 +115,24 @@ export class ToursService {
     }
 
     const imagePath = (tour as any).image;
+    const formattedReviews = tour.reviews?.map((review) => ({
+      ...review,
+      user: review.user
+        ? {
+          id: review.user.id,
+          name: review.user.name,
+          avatar: review.user.avatar,
+          avatar_url: review.user.avatar
+            ? this.urlHelper.asset(review.user.avatar)
+            : null,
+        }
+        : null,
+    }));
+
     const formattedTour = {
       ...tour,
       image: imagePath ? this.urlHelper.asset(imagePath) : null,
+      reviews: formattedReviews || [],
     };
 
     return {
