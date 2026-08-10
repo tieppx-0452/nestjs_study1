@@ -5,5 +5,7 @@
   "MULTIPART_REQUIRED": "Request must be multipart/form-data",
   "FILE_REQUIRED": "No file uploaded",
   "INVALID_FILE_TYPE": "Invalid file type. Only JPG, JPEG, and PNG images are allowed.",
-  "FILE_SIZE_EXCEEDED": "File size exceeds maximum limit of 5MB."
+  "FILE_SIZE_EXCEEDED": "File size exceeds maximum limit of 5MB.",
+  "INVALID_DATE_FORMAT": "Invalid date format. Expected YYYY-MM-DD",
+  "START_DATE_AFTER_END_DATE": "start_date must be before or equal to end_date"
 }
