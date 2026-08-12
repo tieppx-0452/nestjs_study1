@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Put, Request, Post, UseGuards } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { LocalAuthGuard } from './auth/local-auth.guard';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
@@ -6,6 +7,7 @@ import { Public } from './auth/public.decorator';
 import { UsersService } from './users/users.service';
 import { UpdateUserDto } from './users/dto/update-user.dto';
 
+@ApiExcludeController()
 @Controller()
 export class AppController {
   constructor(

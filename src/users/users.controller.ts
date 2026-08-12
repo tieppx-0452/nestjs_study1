@@ -13,6 +13,7 @@ import {
   BadRequestException,
   Optional,
 } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import * as path from 'path';
 import * as fs from 'fs';
 import { I18nService } from 'nestjs-i18n';
@@ -56,6 +57,7 @@ function extractUserFields(fields: any, bodyDto?: any): any {
   return Object.keys(user).length ? user : fields.user || {};
 }
 
+@ApiExcludeController()
 @Controller('users')
 export class UsersController {
   constructor(
