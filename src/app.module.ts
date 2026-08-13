@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import {
   AcceptLanguageResolver,
   HeaderResolver,
@@ -17,6 +18,7 @@ import { CommonModule } from './common/common.module';
 import { ToursModule } from './tours/tours.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { MailListenerModule } from './listeners/mail-listener.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { dataSourceOptions } from './database/data-source';
@@ -35,6 +37,7 @@ import { dataSourceOptions } from './database/data-source';
       envFilePath: process.env.NODE_ENV === 'test' ? '.env.testing' : '.env',
       isGlobal: true,
     }),
+    EventEmitterModule.forRoot(),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
@@ -55,6 +58,9 @@ import { dataSourceOptions } from './database/data-source';
     ToursModule,
     ReviewsModule,
     BookingsModule,
+    MailListenerModule,
   ],
 })
 export class AppModule {}
+
+

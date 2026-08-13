@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { I18nService } from 'nestjs-i18n';
 import { Booking, BookingStatus } from '../../bookings/entities/booking.entity';
 import { QueryAdminBookingsDto } from './dto/admin-bookings.dto';
@@ -15,6 +16,7 @@ export class AdminBookingsService {
   constructor(
     @InjectRepository(Booking)
     private readonly bookingRepository: Repository<Booking>,
+    @Optional() private readonly eventEmitter?: EventEmitter2,
     @Optional() private readonly i18n?: I18nService,
   ) { }
 
@@ -87,11 +89,19 @@ export class AdminBookingsService {
     booking.status = status;
     const savedBooking = await this.bookingRepository.save(booking);
 
+    if (status === BookingStatus.CONFIRMED || status === BookingStatus.REJECTED) {
+      this.eventEmitter?.emit('booking.updated', {
+        bookingId: savedBooking.id,
+        userEmail: booking.user?.email || '',
+        tourName: (booking.tour as any)?.title || (booking.tour as any)?.name || '',
+        status: savedBooking.status,
+      });
+    }
+
     return {
       code: 200,
       messages: [
-        this.i18n?.t('admin.BOOKING_UPDATED_SUCCESS') ||
-          'Cập nhật trạng thái đơn hàng thành công',
+        this.i18n?.t('admin.BOOKING_UPDATED_SUCCESS')
       ],
       data: savedBooking,
     };
@@ -115,8 +125,7 @@ export class AdminBookingsService {
     return {
       code: 200,
       messages: [
-        this.i18n?.t('admin.BOOKING_CANCELLED_SUCCESS') ||
-          'Hủy đơn hàng thành công',
+        this.i18n?.t('admin.BOOKING_CANCELLED_SUCCESS')
       ],
       data: savedBooking,
     };
