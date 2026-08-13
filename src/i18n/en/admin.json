@@ -7,5 +7,9 @@
   "TOUR_CREATED_SUCCESS": "Tour created successfully",
   "TOUR_UPDATED_SUCCESS": "Tour updated successfully",
   "TOUR_DELETED_SUCCESS": "Tour deleted successfully",
-  "CATEGORY_NOT_FOUND": "Category not found"
+  "CATEGORY_NOT_FOUND": "Category not found",
+  "BOOKING_NOT_FOUND": "Booking not found",
+  "BOOKING_UPDATED_SUCCESS": "Booking status updated successfully",
+  "BOOKING_CANCELLED_SUCCESS": "Booking cancelled successfully"
 }
+
