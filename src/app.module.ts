@@ -16,6 +16,7 @@ import { AdminModule } from './admin/admin.module';
 import { CommonModule } from './common/common.module';
 import { ToursModule } from './tours/tours.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { BookingsModule } from './bookings/bookings.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { dataSourceOptions } from './database/data-source';
@@ -53,6 +54,7 @@ import { dataSourceOptions } from './database/data-source';
     AdminModule,
     ToursModule,
     ReviewsModule,
+    BookingsModule,
   ],
 })
 export class AppModule {}
