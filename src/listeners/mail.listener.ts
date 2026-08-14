@@ -6,7 +6,7 @@ export interface BookingUpdatedEventPayload {
   bookingId: number;
   userEmail: string;
   tourName: string;
-  status: 'CONFIRMED' | 'REJECTED';
+  status: 'CONFIRMED' | 'REJECTED' | 'CANCELLED';
 }
 
 @Injectable()
